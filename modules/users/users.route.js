@@ -6,6 +6,30 @@ var series = require("hapi-next"),
 
 
 module.exports = {
+        addUserHistory: {
+        method: "POST",
+        path: "/user/history/add",
+        config: {
+            description: "Adding User Activity for check-in check-out",
+            validate: {
+                payload: {
+                    username: joi.string().email().required(),
+                    logInTime:joi.string().required(),
+                    logOutTime:joi.string().required()
+                }
+            },
+
+            handler: function(request, reply) {
+                var functionSeries = new series([
+                    userHelper.fetchUserDetails,
+                    validator.userDoesNotExists,
+                    controller.addUserHistory
+                ]);
+
+                functionSeries.execute(request, reply);
+            }
+        }
+    }, 
        addUserActivity: {
         method: "POST",
         path: "/user/activity/add",
@@ -57,7 +81,7 @@ module.exports = {
     },
     fetchAllUserDetails: {
         method: "GET",
-        path: "/get/all/users",
+        path: "/get/all/users/{userId}",
         config: {
             description: "Get all users details",
             handler: function(request, reply) {
@@ -116,6 +140,29 @@ module.exports = {
                     userHelper.fetchUserDetails,
                     validator.userDoesNotExists,
                     userHelper.fetchUserNotifications
+                ]);
+
+                functionSeries.execute(request, reply);
+            }
+        }
+    },
+
+    userHistory: {
+        method: "POST",
+        path: "/user/history",
+        config: {
+            description: "User History",
+            validate: {
+                payload: {
+                    username: joi.string().email().required(),
+                }
+            },
+
+            handler: function(request, reply) {
+                var functionSeries = new series([
+                    userHelper.fetchUserDetails,
+                    validator.userDoesNotExists,
+                    userHelper.getUserPreviousHistory
                 ]);
 
                 functionSeries.execute(request, reply);

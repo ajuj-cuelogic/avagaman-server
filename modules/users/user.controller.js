@@ -6,7 +6,8 @@ var promise = require("bluebird"),
 
 var usersModel = mongoose.model("Users"),
     userActivityModel = mongoose.model("UserActivity"),
-    notifyUserModel = mongoose.model("NotifyUser");
+    notifyUserModel = mongoose.model("NotifyUser"),
+    userHistoryModel = mongoose.model("DailyHistory");
 
 var log = require("../../utility/log"),
     network = require("../../utility/network");
@@ -15,14 +16,15 @@ module.exports = {
     addUserActivity: addUserActivity,
     updateUserLogState: updateUserLogState,
     fetchAllUserDetails: fetchAllUserDetails,
-    addNotification:addNotification
+    addNotification:addNotification,
+    addUserHistory:addUserHistory
 }
 
 function fetchAllUserDetails(request, reply) {
 
     log.write("modules > user > user.contoller.js > fetchAllUserDetails()");
 
-    usersModel.findAsync()
+    usersModel.findAsync({ _id: { $nin: [request.params.userId] } })
         .then(function(user) {
 
             reply.data = {
@@ -34,6 +36,35 @@ function fetchAllUserDetails(request, reply) {
             log.write(err);
             reply.next(err);
         })
+}
+
+function addUserHistory (request, reply) {
+    var pocket = {};
+
+    pocket.userHistory = {
+        "userId":   reply.data.user._id,
+        "checkedInTime": request.payload.logInTime,
+        "checkedOutTime": request.payload.logOutTime
+    }
+    pocket.userHistory = new userHistoryModel(pocket.userHistory);
+
+    pocket.userHistory.saveAsync()
+        .then(function(savedUserHistory) {
+            if (!savedUserHistory) {
+                return promise.reject("Unable add user history. Some thing went wrong");
+            }
+            
+                reply.data = {
+                                message: 'History added'
+                             }
+            
+            reply.next();
+        })
+        .catch(function(err) {
+
+            log.write(err);
+            reply.next(err);
+        });
 }
 
 function addNotification(request, reply) {

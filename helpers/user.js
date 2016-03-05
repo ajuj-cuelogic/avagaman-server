@@ -127,8 +127,9 @@ function getUserPreviousHistory(request, reply) {
     var today = moment().startOf('day');
     var tomorrow = moment(today).subtract(7, 'days');
 
+    var uid = request.params.userId ? request.params.userId : reply.data.user._id ; 
     pocket.findClause = {
-        "userId": request.params.userId,
+        "userId": uid,
         "checkedInTime": {
             $gt: Number(tomorrow.valueOf()),
             $lt: Number(today.valueOf())
