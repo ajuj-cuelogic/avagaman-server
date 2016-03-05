@@ -41,10 +41,13 @@ function userLogin(request, reply) {
     var pocket = {};
     pocket.__s = reply.data.tokenPayload.__t;
     pocket._id = reply.data.tokenPayload._id;
+
+
     reply.data = {
         data : {
             "__s": pocket.__s,
             "_id": pocket._id,
+            "username" : request.payload.username
         },
         status:"ok",
         message: "You have successfully login"
