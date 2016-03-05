@@ -28,7 +28,8 @@ var schema = {
     },
     logState: {
         type: Number,
-        enum: [0, 1]
+        enum: [0, 1],
+        default:0
     },
     createdOn: {
         type: Date,

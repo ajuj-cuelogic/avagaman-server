@@ -71,4 +71,56 @@ module.exports = {
             }
         }
     },
+
+    notifyUser: {
+        method: "POST",
+        path: "/user/notify",
+        config: {
+            description: "Notifiy User",
+            validate: {
+                payload: {
+                    username: joi.string().email().required(),
+                    toUserId: joi.string().required(),
+                    logMessage:joi.string().optional(),
+                    logStatus:joi.string().optional(),
+                    isNotified:joi.string().required(),
+                }
+            },
+
+            handler: function(request, reply) {
+                var functionSeries = new series([
+                    userHelper.fetchUserDetails,
+                    validator.userDoesNotExists,
+                    userHelper.fetchToUserDetail,
+                    controller.addNotification
+                ]);
+
+                functionSeries.execute(request, reply);
+            }
+        }
+    },
+
+    userNotifications: {
+        method: "POST",
+        path: "/user/notifications",
+        config: {
+            description: "User Notifications",
+            validate: {
+                payload: {
+                    username: joi.string().email().required(),
+                }
+            },
+
+            handler: function(request, reply) {
+                var functionSeries = new series([
+                    userHelper.fetchUserDetails,
+                    validator.userDoesNotExists,
+                    userHelper.fetchUserNotifications
+                ]);
+
+                functionSeries.execute(request, reply);
+            }
+        }
+    }
+
 };

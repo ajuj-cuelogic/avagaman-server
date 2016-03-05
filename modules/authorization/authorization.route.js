@@ -43,7 +43,7 @@ module.exports = {
         config: {
             validate: {
                 payload: {
-                    username: joi.string().email().required(),
+                    username: joi.string().trim().email().required(),
                     password: joi.string().required()
                 }
             },

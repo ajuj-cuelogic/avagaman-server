@@ -6,13 +6,16 @@ var promise = require("bluebird"),
 var usersModel = mongoose.model("Users");
 var userActivity = mongoose.model("UserActivity");
 var DailyHistory = mongoose.model("DailyHistory");
+var NotifyUser = mongoose.model("NotifyUser");
 
 var log = require("../utility/log");
 
 module.exports = {
     fetchUserDetails        : fetchUserDetails,
     getUserTodayHistory     : getUserTodayHistory,
-    getUserPreviousHistory  : getUserPreviousHistory
+    getUserPreviousHistory  : getUserPreviousHistory,
+    fetchToUserDetail       : fetchToUserDetail,
+    fetchUserNotifications  : fetchUserNotifications
 }
 
 
@@ -29,7 +32,7 @@ function fetchUserDetails(request, reply) {
         }
     } else if (!(_.isEmpty(request.payload))) {
         pocket.findClause = {
-            "username": request.payload.username
+            "username": (request.payload.username).toLowerCase().trim()
         }
     } else {
         return reply.next("Oops it's seems that you did not provided parameters.")
@@ -65,6 +68,51 @@ function getUserTodayHistory(request, reply) {
             reply.data = {
                 userTodayHistory: userActivity,
                 user: reply.data.user
+            }
+            reply.next();
+        }).catch(function(err) {
+            log.write(err);
+            reply.next(err);
+        })
+}
+
+
+function fetchUserNotifications (request, reply) {
+    log.write("helpers > user > fetchUserNotifications()");
+    var pocket = {};
+
+    pocket.findClause = {
+        "toUserId": reply.data.user._id
+    }
+    NotifyUser.find(pocket.findClause)
+        .populate('toUserId')
+        .lean()
+        .execAsync()
+        .then(function(userNotifications) {
+            reply.data = {
+                user: reply.data.user,
+                userNotifications: userNotifications
+            }
+            reply.next();
+        }).catch(function(err) {
+            log.write(err);
+            reply.next(err);
+        })
+}
+
+function fetchToUserDetail (request, reply) {
+    log.write("helpers > user > fetchToUserDetail()");
+
+    var pocket = {};
+
+    pocket.findClause = {
+        "_id": request.payload.toUserId
+    }
+    usersModel.findOneAsync(pocket.findClause)
+        .then(function(user) {
+            reply.data = {
+                user: reply.data.user,
+                toUser: user
             }
             reply.next();
         }).catch(function(err) {

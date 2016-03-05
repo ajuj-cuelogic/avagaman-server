@@ -5,7 +5,8 @@ var promise = require("bluebird"),
     moment = require("moment");
 
 var usersModel = mongoose.model("Users"),
-    userActivityModel = mongoose.model("UserActivity");
+    userActivityModel = mongoose.model("UserActivity"),
+    notifyUserModel = mongoose.model("NotifyUser");
 
 var log = require("../../utility/log"),
     network = require("../../utility/network");
@@ -13,7 +14,8 @@ var log = require("../../utility/log"),
 module.exports = {
     addUserActivity: addUserActivity,
     updateUserLogState: updateUserLogState,
-    fetchAllUserDetails: fetchAllUserDetails
+    fetchAllUserDetails: fetchAllUserDetails,
+    addNotification:addNotification
 }
 
 function fetchAllUserDetails(request, reply) {
@@ -34,6 +36,41 @@ function fetchAllUserDetails(request, reply) {
         })
 }
 
+function addNotification(request, reply) {
+
+    log.write("modules > user > user.contoller.js > addNotification()");
+
+    var pocket = {};
+
+    pocket.notifyUser = {
+        "userId":   reply.data.user._id,
+        "toUserId": reply.data.toUser._id,
+        "logStatus": request.payload.logStatus,
+        "logMessage": request.payload.logMessage,
+        "isNotified": request.payload.isNotified,
+    }
+
+    pocket.notifyUser = new notifyUserModel(pocket.notifyUser);
+
+    pocket.notifyUser.saveAsync()
+        .then(function(savedNotifyUser) {
+            if (!savedNotifyUser) {
+                return promise.reject("Unable add user notification. Some thing went wrong");
+            }
+            
+                reply.data = {
+                                message: 'Notification added'
+                         }
+            
+            reply.next();
+        })
+        .catch(function(err) {
+
+            log.write(err);
+            reply.next(err);
+        });
+
+}
 
 function updateUserLogState(request, reply) {
     log.write("modules > user > user.contoller.js > updateUserLogState()");
