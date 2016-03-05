@@ -13,6 +13,7 @@ server.connection({
 });
 
 require("./database");
+require("./modules");
 
 
 server.start(function() {

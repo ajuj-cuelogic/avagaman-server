@@ -9,7 +9,7 @@ requireDir(module, './models');
 mongoose.connect("mongodb://" + process.env.MONGODB_HOST + "/" + process.env.MONGODB_DATABASE);
 
 mongoose.connection.on("error", function() {
-    console.log(process.env.APP_SAYS + " Avagaman syas: Database connection failed!");
+    console.log(process.env.APP_SAYS + " Database connection failed!");
 });
 
 mongoose.connection.open("open", function() {
