@@ -1,15 +1,30 @@
+var series = require("hapi-next"),
+    controller = require("./authorization.controller"),
+    joi = require("joi");
 module.exports = {
-    firstCall: {
+    userSignup: {
         method: "POST",
-        path: "/user/call",
+        path: "/user/signup",
         config: {
-            description: "Demo Call",
+            description: "Accept user signup details and create a user entity in database",
+            validate: {
+                payload: {
+                    firstName: joi.string().required(),
+                    lastName: joi.string().required(),
+                    username: joi.string().email().required(),
+                    password: joi.string().min(6).required(),
+                    type: joi.string().required()
+                }
+            },
 
             handler: function(request, reply) {
 
-                console.log(process.env.APP_SAYS + " First route called");
+                var functionSeries = new series([
+                    controller.userSignup
+                ]);
+
+                functionSeries.execute(request, reply);
             }
         }
-    },
+    }
 };
-console.log("called");
