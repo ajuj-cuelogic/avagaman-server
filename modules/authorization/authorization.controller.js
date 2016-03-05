@@ -41,9 +41,6 @@ function userLogin(request, reply) {
     var pocket = {};
     pocket.__s = reply.data.tokenPayload.__t;
     pocket._id = reply.data.tokenPayload._id;
-    console.log("\n\n" );
-console.log(reply.data );
-console.log("\n\n" );
     reply.data = {
         data : {
             "__s": pocket.__s,

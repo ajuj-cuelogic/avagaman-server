@@ -7,13 +7,24 @@ require('dotenv').load();
 
 var server = module.exports = new hapi.Server();
 
-server.connection({
-     routes: {
-        cors: true
-    },
-    host: process.env.SERVER_HOST,
-    port: process.env.SERVER_PORT
-});
+
+if (process.env.SERVER_HOST) { //for local connection
+    server.connection({
+        routes: {
+            cors: true
+        },
+        host: process.env.SERVER_HOST,
+        port: process.env.SERVER_PORT
+    });
+} else { //for live connection
+    server.connection({
+        routes: {
+            cors: true
+        },
+        port: process.env.SERVER_PORT
+    });
+}
+
 
 
 require("./database");
