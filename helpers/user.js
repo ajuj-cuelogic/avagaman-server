@@ -4,6 +4,8 @@ var promise = require("bluebird"),
     _ = require("lodash");
 
 var usersModel = mongoose.model("Users");
+var userActivity = mongoose.model("UserActivity");
+var DailyHistory = mongoose.model("DailyHistory");
 
 var log = require("../utility/log");
 
@@ -85,7 +87,6 @@ function getUserPreviousHistory(request, reply) {
         }
 
     }
-    console.log(pocket.findClause);
     DailyHistory.findAsync(pocket.findClause)
         .then(function(userActivity) {
             reply.data = {

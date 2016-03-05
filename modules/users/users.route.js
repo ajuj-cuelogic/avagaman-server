@@ -36,10 +36,6 @@ module.exports = {
         method: "GET",
         path: "/get/user/dashboard/{userId}",
         config: {
-            auth: {
-                strategy: "Basic",
-                scope: ["user", "admin"]
-            },
             description: "Get user dashboard",
             validate: {
                 params: {
