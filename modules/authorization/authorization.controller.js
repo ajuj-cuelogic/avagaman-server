@@ -15,6 +15,7 @@ function userSignup(request, reply) {
     var pocket = {},
         newUser;
     pocket.newUser = request.payload;
+    pocket.newUser["password"] = reply.data.hashedPassword;
     newUser = new usersModel(pocket.newUser);
 
     newUser.saveAsync()
@@ -40,7 +41,9 @@ function userLogin(request, reply) {
     var pocket = {};
     pocket.__s = reply.data.tokenPayload.__t;
     pocket._id = reply.data.tokenPayload._id;
-
+    console.log("\n\n" );
+console.log(reply.data );
+console.log("\n\n" );
     reply.data = {
         data : {
             "__s": pocket.__s,
