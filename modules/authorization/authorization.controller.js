@@ -34,3 +34,20 @@ function userSignup(request, reply) {
         });
 }
 
+function userLogin(request, reply) {
+
+
+    var pocket = {};
+    pocket.__s = reply.data.tokenPayload.__t;
+    pocket._id = reply.data.tokenPayload._id;
+
+    reply.data = {
+        data : {
+            "__s": pocket.__s,
+            "_id": pocket._id,
+        },
+        status:"ok",
+        message: "You have successfully login"
+   }
+    reply.next();
+}
