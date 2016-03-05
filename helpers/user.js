@@ -1,4 +1,5 @@
 var promise = require("bluebird"),
+    moment = require("moment"),
     mongoose = promise.promisifyAll(require("mongoose")),
     _ = require("lodash");
 
@@ -7,7 +8,9 @@ var usersModel = mongoose.model("Users");
 var log = require("../utility/log");
 
 module.exports = {
-    fetchUserDetails: fetchUserDetails
+    fetchUserDetails        : fetchUserDetails,
+    getUserTodayHistory     : getUserTodayHistory,
+    getUserPreviousHistory  : getUserPreviousHistory
 }
 
 
@@ -42,3 +45,61 @@ function fetchUserDetails(request, reply) {
             reply.next(err);
         })
 }
+function getUserTodayHistory(request, reply) {
+    log.write("helpers > user > getUserTodayHistory()");
+    var pocket = {};
+    var today = moment().startOf('day');
+    var tomorrow = moment(today).add(1, 'days');
+    pocket.findClause = {
+        "userId": request.params.userId,
+        "logTime": {
+            $gte: Number(today.valueOf()),
+            $lt: Number(tomorrow.valueOf())
+        }
+    }
+
+    userActivity.findAsync(pocket.findClause)
+        .then(function(userActivity) {
+            reply.data = {
+                userTodayHistory: userActivity,
+                user: reply.data.user
+            }
+            reply.next();
+        }).catch(function(err) {
+            log.write(err);
+            reply.next(err);
+        })
+}
+
+function getUserPreviousHistory(request, reply) {
+    log.write("helpers > user > getUserPreviousHistory()");
+    var pocket = {};
+    var today = moment().startOf('day');
+    var tomorrow = moment(today).subtract(7, 'days');
+
+    pocket.findClause = {
+        "userId": request.params.userId,
+        "checkedInTime": {
+            $gt: Number(tomorrow.valueOf()),
+            $lt: Number(today.valueOf())
+        }
+
+    }
+    console.log(pocket.findClause);
+    DailyHistory.findAsync(pocket.findClause)
+        .then(function(userActivity) {
+            reply.data = {
+                'status': 'ok',
+                'data': {
+                    userOldHistory: userActivity,
+                    userTodayHistory: reply.data.userTodayHistory,
+                    user: reply.data.user
+                }
+            }
+            reply.next();
+        }).catch(function(err) {
+            log.write(err);
+            reply.next(err);
+        })
+}
+

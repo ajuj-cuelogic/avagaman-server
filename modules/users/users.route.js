@@ -31,5 +31,32 @@ module.exports = {
                 functionSeries.execute(request, reply);
             }
         }
+    }, 
+    fetchUserDashboard: {
+        method: "GET",
+        path: "/get/user/dashboard/{userId}",
+        config: {
+            auth: {
+                strategy: "Basic",
+                scope: ["user", "admin"]
+            },
+            description: "Get user dashboard",
+            validate: {
+                params: {
+                    userId: joi.string().required()
+                }
+            },
+            handler: function(request, reply) {
+
+                var functionSeries = new series([
+                    userHelper.fetchUserDetails,
+                    validator.userDoesNotExists,
+                    userHelper.getUserTodayHistory,
+                    userHelper.getUserPreviousHistory
+                ]);
+
+                functionSeries.execute(request, reply);
+            }
+        }
     }
 };
