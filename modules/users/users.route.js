@@ -54,5 +54,21 @@ module.exports = {
                 functionSeries.execute(request, reply);
             }
         }
-    }
+    },
+    fetchAllUserDetails: {
+        method: "GET",
+        path: "/get/all/users",
+        config: {
+            description: "Get all users details",
+            handler: function(request, reply) {
+
+                var functionSeries = new series([
+                    controller.fetchAllUserDetails,
+                    validator.userDoesNotExists,
+                ]);
+
+                functionSeries.execute(request, reply);
+            }
+        }
+    },
 };

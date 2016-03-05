@@ -12,8 +12,28 @@ var log = require("../../utility/log"),
 
 module.exports = {
     addUserActivity: addUserActivity,
-    updateUserLogState: updateUserLogState
+    updateUserLogState: updateUserLogState,
+    fetchAllUserDetails: fetchAllUserDetails
 }
+
+function fetchAllUserDetails(request, reply) {
+
+    log.write("modules > user > user.contoller.js > fetchAllUserDetails()");
+
+    usersModel.findAsync()
+        .then(function(user) {
+
+            reply.data = {
+                user: user
+            }
+
+            reply.next();
+        }).catch(function(err) {
+            log.write(err);
+            reply.next(err);
+        })
+}
+
 
 function updateUserLogState(request, reply) {
     log.write("modules > user > user.contoller.js > updateUserLogState()");

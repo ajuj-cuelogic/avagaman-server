@@ -59,7 +59,7 @@ function getUserTodayHistory(request, reply) {
             $lt: Number(tomorrow.valueOf())
         }
     }
-
+    
     userActivity.findAsync(pocket.findClause)
         .then(function(userActivity) {
             reply.data = {
