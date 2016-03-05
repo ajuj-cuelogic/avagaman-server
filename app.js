@@ -12,6 +12,9 @@ server.connection({
     port    :   process.env.SERVER_PORT
 });
 
+require("./database");
+
+
 server.start(function() {
-    console.log("Server running at: " + server.info.uri);
+    console.log(process.env.APP_SAYS + " Server running at: " + server.info.uri);
 });
