@@ -19,6 +19,7 @@ module.exports = {
                     lastName: joi.string().required(),
                     username: joi.string().email().required(),
                     password: joi.string().min(6).required(),
+                    gender: joi.string().optional(),
                     type: joi.string().required()
                 }
             },

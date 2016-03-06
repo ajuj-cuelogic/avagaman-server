@@ -85,7 +85,7 @@ function fetchUserNotifications (request, reply) {
         "toUserId": reply.data.user._id
     }
     NotifyUser.find(pocket.findClause)
-        .populate('toUserId')
+        .populate('userId')
         .lean()
         .execAsync()
         .then(function(userNotifications) {

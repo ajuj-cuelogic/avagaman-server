@@ -2,7 +2,8 @@
 
 var promise = require("bluebird"),
     mongoose = promise.promisifyAll(require("mongoose")),
-    moment = require("moment");
+    moment = require("moment"),
+    async = require("async");
 
 var usersModel = mongoose.model("Users"),
     userActivityModel = mongoose.model("UserActivity"),
@@ -10,14 +11,16 @@ var usersModel = mongoose.model("Users"),
     userHistoryModel = mongoose.model("DailyHistory");
 
 var log = require("../../utility/log"),
-    network = require("../../utility/network");
+    network = require("../../utility/network"),
+    email = require("../../utility/email");
 
 module.exports = {
     addUserActivity: addUserActivity,
     updateUserLogState: updateUserLogState,
     fetchAllUserDetails: fetchAllUserDetails,
-    addNotification:addNotification,
-    addUserHistory:addUserHistory
+    addNotification: addNotification,
+    addUserHistory: addUserHistory,
+    checkNotifications: checkNotifications
 }
 
 function fetchAllUserDetails(request, reply) {
@@ -38,11 +41,85 @@ function fetchAllUserDetails(request, reply) {
         })
 }
 
-function addUserHistory (request, reply) {
+function checkNotifications(request, reply) {
+    console.log(request.payload.logState);
+    log.write("modules > user > user.contoller.js > checkNotifications()");
+    if (request.payload.logState == "1") {
+        var pocket = {};
+        pocket.findClause = {
+            "toUserId": reply.data.user._id,
+            "isNotified": "0"
+        }
+        console.log(pocket.findClause);
+        notifyUserModel.findAsync(pocket.findClause)
+            .then(function(notifyUser) {
+                    //Add code to update isNotified column in NotifyUser Model and 
+                    //send mail or notification to userId
+                    console.log(notifyUser);
+
+                    async.series(notifyUser.map(function(userObj, index) {
+                            return function(cb) {
+                                usersModel.findById({
+                                        "_id": userObj.userId
+                                    })
+                                    .then(function(userData) {
+                                        // console.log(userData);
+                                        
+                                        pocket.userData = userData;
+                                        if (!pocket.userData) {
+                                            return promise.reject("Opps something went wrong");
+                                        }
+                                        
+                                        return notifyUserModel.findByIdAndUpdate({
+                                            "_id": userObj._id,
+                                            
+                                        }, {
+                                            $set: {
+                                                "isNotified": 1
+                                            }
+                                        })
+                                    })
+                                    .then(function(updatedUser) {
+                                        if (updatedUser) {
+                                             email.sendEmailToSenderAfterReceiverCheckIn(pocket.userData.username, pocket.userData.firstName, reply.data.user.firstName);   
+                                        }
+                                    })
+                                    .catch(function(err) {
+                                        log.write(err);
+                                        reply.next(err);
+                                    })
+                                    .finally(function() {
+                                        cb()
+                                    })
+
+                            }
+
+                        }),
+                        function(err, results) {
+                            console.log("Yoooo")
+                        });
+
+                
+
+
+                reply.data = {
+                    notifyUser: notifyUser
+                }
+
+            })
+            .catch(function(err) {
+                log.write(err);
+                //reply.next(err);
+            })
+    }
+    reply.next();
+}
+
+function addUserHistory(request, reply) {
     var pocket = {};
 
     pocket.userHistory = {
-        "userId":   reply.data.user._id,
+        "userId": reply.data.user._id,
         "checkedInTime": request.payload.logInTime,
         "checkedOutTime": request.payload.logOutTime
     }
@@ -53,11 +130,11 @@ function addUserHistory (request, reply) {
             if (!savedUserHistory) {
                 return promise.reject("Unable add user history. Some thing went wrong");
             }
-            
-                reply.data = {
-                                message: 'History added'
-                             }
-            
+
+            reply.data = {
+                message: 'History added'
+            }
+
             reply.next();
         })
         .catch(function(err) {
@@ -74,7 +151,7 @@ function addNotification(request, reply) {
     var pocket = {};
 
     pocket.notifyUser = {
-        "userId":   reply.data.user._id,
+        "userId": reply.data.user._id,
         "toUserId": reply.data.toUser._id,
         "logStatus": request.payload.logStatus,
         "logMessage": request.payload.logMessage,
@@ -85,14 +162,15 @@ function addNotification(request, reply) {
 
     pocket.notifyUser.saveAsync()
         .then(function(savedNotifyUser) {
+            email.sendEmailToSenderBeforeReceiverCheckIn(reply.data.toUser.username, reply.data.user.firstName, reply.data.user.lastName, request.payload.logMessage);
             if (!savedNotifyUser) {
                 return promise.reject("Unable add user notification. Some thing went wrong");
             }
-            
-                reply.data = {
-                                message: 'Notification added'
-                         }
-            
+
+            reply.data = {
+                message: 'Notification added'
+            }
+
             reply.next();
         })
         .catch(function(err) {
@@ -109,7 +187,7 @@ function updateUserLogState(request, reply) {
             "_id": reply.data.user._id
         }, {
             $set: {
-                logState : request.payload.logState
+                logState: request.payload.logState
             }
         })
         .then(function(updatedUserData) {
@@ -117,13 +195,13 @@ function updateUserLogState(request, reply) {
             if (!updatedUserData) {
                 return promise.reject("Unable to update information");
             }
-            if(request.payload.logState == "0")
+            if (request.payload.logState == "0")
                 var msg = "Bye..!! You have been checked out successfully";
             else
                 var msg = "Welcome, You have been checked in successfully";
 
             reply.data = {
-                status:"ok",
+                status: "ok",
                 message: msg
             }
 
@@ -141,7 +219,7 @@ function addUserActivity(request, reply) {
     log.write("modules > user > user.contoller.js > addUserActivity()");
 
     var pocket = {};
-    
+
     pocket.userActivity = {
         "deviceId": network.getIp(request),
         "userAgent": network.getUserAgent(request),
@@ -160,14 +238,14 @@ function addUserActivity(request, reply) {
                 return promise.reject("Unable add user activity. Some thing went wrong");
             }
             console.log("Line 112");
-            
+
             if (typeof reply.data == undefined) {
                 reply.data = {
-                                message: 'Activity added',
-                                status:"ok",
-                         }
-            } 
-            
+                    message: 'Activity added',
+                    status: "ok",
+                }
+            }
+
             reply.next();
         })
         .catch(function(err) {

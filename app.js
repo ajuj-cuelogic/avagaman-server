@@ -33,5 +33,5 @@ require("./authentication"),
 
 
 server.start(function() {
-    console.log(process.env.APP_SAYS + " Server running at: " + server.info.uri);
+    console.log(process.env.APP_SAYS + " Server running atttt: " + server.info.uri);
 });

@@ -44,11 +44,12 @@ module.exports = {
                 }
             },
 
-            handler: function(request, reply) {
+            handler: function(request, reply) { console.log("called");
                 var functionSeries = new series([
                     userHelper.fetchUserDetails,
                     validator.userDoesNotExists,
                     controller.addUserActivity,
+                    controller.checkNotifications,
                     controller.updateUserLogState
                 ]);
 

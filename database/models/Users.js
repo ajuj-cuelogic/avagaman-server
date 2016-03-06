@@ -31,6 +31,11 @@ var schema = {
         enum: [0, 1],
         default:0
     },
+    gender: {
+        type: String,
+        enum: ["male", "female","others"],
+        default:"male"
+    },
     createdOn: {
         type: Date,
         default: null
